@@ -2,8 +2,7 @@ namespace Tsm;
 
 public interface StateTransition
 {
-    string FromState { get; }
-    void Transit(StateData data);
+    Task TransitAsync(StateData data, CancellationToken cancellationToken);
 }
 
-public delegate void StateTransitionAction(StateData data);
+public delegate Task StateTransitionActionAsync(StateData data, CancellationToken cancellationToken);

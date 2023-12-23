@@ -2,9 +2,12 @@ namespace Tsm;
 
 public abstract class StateTransitionBase : StateTransition
 {
-    protected StateTransitionBase(string fromState) => FromState = fromState;
-    
-    public string FromState { get; }
+    public virtual Task TransitAsync(StateData data, CancellationToken cancellationToken)
+    {
+        Transit(data);
+        return Task.CompletedTask;
+    }
 
-    public abstract void Transit(StateData data);
+    public virtual void Transit(StateData data) { }
+    
 }
