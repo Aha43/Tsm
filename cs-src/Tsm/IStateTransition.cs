@@ -1,6 +1,6 @@
 namespace Tsm;
 
-public interface StateTransition
+public interface IStateTransition
 {
     Task TransitAsync(StateData data, CancellationToken cancellationToken);
 }

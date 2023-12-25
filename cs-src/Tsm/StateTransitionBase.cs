@@ -1,6 +1,6 @@
 namespace Tsm;
 
-public abstract class StateTransitionBase : StateTransition
+public abstract class StateTransitionBase : IStateTransition
 {
     public virtual Task TransitAsync(StateData data, CancellationToken cancellationToken)
     {
