@@ -60,6 +60,8 @@ public class StateMachine
         if (_stateTransitionFunctions.TryGetValue(fromState, out var t)) return t;
         throw new TransitionNotFoundException(fromState);
     }
+    
+    public StateMachine Add
 
     public StateMachine AddTransition(string fromState, StateTransitionActionAsync t)
     {
@@ -70,24 +72,30 @@ public class StateMachine
 
     public StateMachine AddTransition(string fromState, IStateTransition t) => AddTransition(fromState, t.TransitAsync);
 
-    public async Task<StateData> RunAsync(int n, CancellationToken cancellationToken = default)
+    public async Task<StateData> RunAsync(StateMachineParameter p, CancellationToken cancellationToken = default)
     {
-        if (n < 0)
-        {
-            throw new ArgumentException($"n < 0 : {n}");
-        }
-        
         var retVal = new StateData();
+        
+        retVal.SetStateData(p.StateData);
+
+        var trial = p.Trial;
 
         var i = 0;
-        while (retVal.State != null)
+        var n = p.N;
+        while (!retVal.State.IsEnd())
         {
             if (n > 0 && i == n) return retVal;
             var t = GetStateTransition(retVal.State);
             await t.Invoke(retVal, cancellationToken);
             i++;
-        } 
-        
+        }
+
+        trial?.AddBreadCrumb(new BreadCrumb
+        {
+            State = "end",
+            Representation = retVal.GetStateData<object>()?.ToString()
+        });
+
         return retVal;
     }
     
