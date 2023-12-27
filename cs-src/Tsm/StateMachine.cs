@@ -60,8 +60,11 @@ public class StateMachine
         if (_stateTransitionFunctions.TryGetValue(fromState, out var t)) return t;
         throw new TransitionNotFoundException(fromState);
     }
-    
-    public StateMachine Add
+
+    public StateMachine AddStartTransition(StateTransitionActionAsync t) 
+        => AddTransition(IntrinsicStates.Start, t);
+
+    public StateMachine AddStartTransition(IStateTransition t) => AddTransition(IntrinsicStates.Start, t);
 
     public StateMachine AddTransition(string fromState, StateTransitionActionAsync t)
     {
