@@ -1,4 +1,7 @@
-namespace Tsm;
+using Tsm.Abstraction;
+using Tsm.Domain;
+
+namespace Tsm.Infrastructure;
 
 public abstract class StateTransitionBase : IStateTransition
 {

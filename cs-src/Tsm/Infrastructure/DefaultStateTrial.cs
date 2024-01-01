@@ -1,6 +1,8 @@
 using System.Collections;
+using Tsm.Abstraction;
+using Tsm.Domain;
 
-namespace Tsm;
+namespace Tsm.Infrastructure;
 
 public class DefaultStateTrial : IStateTrial
 {

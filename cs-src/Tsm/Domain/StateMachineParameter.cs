@@ -1,4 +1,7 @@
-namespace Tsm;
+using Tsm.Abstraction;
+using Tsm.Infrastructure;
+
+namespace Tsm.Domain;
 
 public record class StateMachineParameter
 {

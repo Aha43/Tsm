@@ -1,4 +1,4 @@
-namespace Tsm;
+namespace Tsm.Domain;
 
 public record class BreadCrumb
 {

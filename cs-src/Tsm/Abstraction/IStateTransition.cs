@@ -1,4 +1,6 @@
-namespace Tsm;
+using Tsm.Domain;
+
+namespace Tsm.Abstraction;
 
 public interface IStateTransition
 {

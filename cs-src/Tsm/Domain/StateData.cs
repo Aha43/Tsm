@@ -1,4 +1,6 @@
-namespace Tsm;
+using Tsm.Infrastructure;
+
+namespace Tsm.Domain;
 
 public sealed class StateData
 {

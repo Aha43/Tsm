@@ -1,4 +1,4 @@
-namespace Tsm;
+namespace Tsm.Exceptions;
 
 public sealed class TransitionNotFoundException : Exception
 {

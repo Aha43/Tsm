@@ -1,4 +1,4 @@
-namespace Tsm;
+namespace Tsm.Infrastructure;
 
 public static class IntrinsicStates
 {

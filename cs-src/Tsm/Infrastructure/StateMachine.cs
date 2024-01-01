@@ -1,8 +1,12 @@
 using System.Data;
+using Tsm.Abstraction;
+using Tsm.Attributes;
+using Tsm.Domain;
+using Tsm.Exceptions;
 
-namespace Tsm;
+namespace Tsm.Infrastructure;
 
-public class StateMachine
+public class StateMachine : IStateMachine
 {
     private readonly Dictionary<string, StateTransitionActionAsync> _stateTransitionFunctions = new();
 
@@ -45,7 +49,7 @@ public class StateMachine
         }
     }
 
-    public bool GotTransition(string fromState) => _stateTransitionFunctions.ContainsKey(fromState);
+    private bool GotTransition(string fromState) => _stateTransitionFunctions.ContainsKey(fromState);
 
     private void CheckTransition(string fromState)
     {

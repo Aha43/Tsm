@@ -1,4 +1,4 @@
-namespace Tsm;
+namespace Tsm.Attributes;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public sealed class StateAttribute : Attribute
