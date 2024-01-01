@@ -1,0 +1,2 @@
+namespace Tsm.Abstraction;
+

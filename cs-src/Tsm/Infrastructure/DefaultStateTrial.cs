@@ -18,8 +18,6 @@ public class DefaultStateTrial : IStateTrial
         return this;
     }
 
-    public int Length => _trial.Count;
-
     public BreadCrumb this[int idx] => _trial[idx];
     
 }

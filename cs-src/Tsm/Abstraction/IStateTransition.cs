@@ -4,10 +4,10 @@ namespace Tsm.Abstraction;
 
 public interface IStateTransition
 {
-    Task TransitAsync(StateData data, CancellationToken cancellationToken);
-    void Transit(StateData data);
+    Task TransitAsync(StateMachineData machineData, CancellationToken cancellationToken);
+    void Transit(StateMachineData machineData);
 }
 
-public delegate Task StateTransitionActionAsync(StateData data, CancellationToken cancellationToken);
+public delegate Task StateTransitionActionAsync(StateMachineData machineData, CancellationToken cancellationToken);
 
-public delegate void StateTransitionAction(StateData data);
+public delegate void StateTransitionAction(StateMachineData machineData);

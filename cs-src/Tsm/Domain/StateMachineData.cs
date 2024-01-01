@@ -1,12 +1,15 @@
+using Tsm.Abstraction;
 using Tsm.Infrastructure;
 
 namespace Tsm.Domain;
 
-public sealed class StateData
+public sealed class StateMachineData
 {
-    private object? _data = null;
-
     private string _state = IntrinsicStates.Start;
+    
+    public StateMachineParameter Parameter { get; }
+
+    public IStateTrial? Trial => Parameter.Trial;
 
     public string State
     {
@@ -22,8 +25,10 @@ public sealed class StateData
 
         get => _state;
     } 
+    
+    public T? GetStateData<T>() where T : class => Parameter.StateData as T;
 
-    public void SetStateData(object? data) => _data = data;
-    public T? GetStateData<T>() where T : class => _data as T;
+    internal StateMachineData(StateMachineParameter p) => Parameter = p;
+
 }
 

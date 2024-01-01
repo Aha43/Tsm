@@ -7,8 +7,8 @@ namespace TsmTest.TestTransitions;
 [State]
 public class SingleState : StateTransitionBase
 {
-    public override void Transit(StateData data)
+    public override void Transit(StateMachineData machineData)
     {
-        data.State = IntrinsicStates.End;
+        machineData.State = IntrinsicStates.End;
     }
 }

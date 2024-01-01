@@ -5,12 +5,12 @@ namespace Tsm.Infrastructure;
 
 public abstract class StateTransitionBase : IStateTransition
 {
-    public virtual Task TransitAsync(StateData data, CancellationToken cancellationToken)
+    public virtual Task TransitAsync(StateMachineData machineData, CancellationToken cancellationToken)
     {
-        Transit(data);
+        Transit(machineData);
         return Task.CompletedTask;
     }
 
-    public virtual void Transit(StateData data) { }
+    public virtual void Transit(StateMachineData machineData) { }
     
 }

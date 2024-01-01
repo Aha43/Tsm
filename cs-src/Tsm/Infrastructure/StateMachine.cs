@@ -1,5 +1,6 @@
 using System.Data;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Tsm.Abstraction;
 using Tsm.Attributes;
 using Tsm.Domain;
@@ -12,15 +13,19 @@ public class StateMachine : IStateMachine
     private readonly Dictionary<string, StateTransitionActionAsync> _stateTransitionAsyncFunctions = new();
     private readonly Dictionary<string, StateTransitionAction> _stateTransitionFunctions = new();
 
-    public StateMachine()
+    private readonly StateMachineOption _option = new();
+
+    public StateMachine(Action<StateMachineOption>? opt = null)
     {
+        opt?.Invoke(_option);
+
         foreach (var t in GetTransitionsByReflection())
         {
             AddTransition(t.state, t.st);
         }
     }
 
-    private static IEnumerable<(string state, IStateTransition st)> GetTransitionsByReflection()
+    private IEnumerable<(string state, IStateTransition st)> GetTransitionsByReflection()
     {
         var transitionType = typeof(IStateTransition);
         
@@ -29,22 +34,16 @@ public class StateMachine : IStateMachine
         {
             foreach (var t in assembly.GetTypes())
             {
-                if (t.Name.EndsWith("SingleState"))
-                {
-                    var i = 5;
-                }
-                    
                 if (t is not { IsClass: true } || 
-                    t.IsAbstract) continue;
-
-                if (!transitionType.IsAssignableFrom(t)) continue;
+                    t.IsAbstract ||
+                    !transitionType.IsAssignableFrom(t)) continue;
                 
                 IStateTransition? current = null;
                 
                 foreach (var a in GetStateAttributes(t))
                 {
                     current ??= Activator.CreateInstance(t) as IStateTransition;
-                    if (current != null)
+                    if (current != null && _option.StateTransitionFilters.Invoke(a.State))
                     {
                         yield return (a.State, current);    
                     }
@@ -118,14 +117,12 @@ public class StateMachine : IStateMachine
     public StateMachine AddTransition(string fromState, IStateTransition t)
         => AddTransition(fromState, t.TransitAsync).AddTransition(fromState, t.Transit);
     
-    public async Task<StateData> RunAsync(StateMachineParameter? p = null, 
+    public async Task<StateMachineData> RunAsync(StateMachineParameter? p = null, 
         CancellationToken cancellationToken = default)
     {
         p = p ?? new StateMachineParameter();
         
-        var retVal = new StateData();
-        
-        retVal.SetStateData(p.StateData);
+        var retVal = new StateMachineData(p);
 
         var trial = p.Trial;
 
@@ -148,13 +145,11 @@ public class StateMachine : IStateMachine
         return retVal;
     }
     
-    public StateData Run(StateMachineParameter? p = null)
+    public StateMachineData Run(StateMachineParameter? p = null)
     {
         p = p ?? new StateMachineParameter();
         
-        var retVal = new StateData();
-        
-        retVal.SetStateData(p.StateData);
+        var retVal = new StateMachineData(p);
 
         var trial = p.Trial;
 
