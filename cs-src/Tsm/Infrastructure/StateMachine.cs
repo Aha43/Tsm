@@ -16,11 +16,11 @@ public class StateMachine : IStateMachine
     {
         foreach (var t in GetTransitionsByReflection())
         {
-            AddTransition(t.state, t.f);
+            AddTransition(t.state, t.st);
         }
     }
 
-    private static IEnumerable<(string state, StateTransitionActionAsync f)> GetTransitionsByReflection()
+    private static IEnumerable<(string state, IStateTransition st)> GetTransitionsByReflection()
     {
         var transitionType = typeof(IStateTransition);
         
@@ -29,14 +29,25 @@ public class StateMachine : IStateMachine
         {
             foreach (var t in assembly.GetTypes())
             {
-                if (t is not { IsClass: true } || t.IsAbstract || !t.IsSubclassOf(transitionType)) continue;
+                if (t.Name.EndsWith("SingleState"))
+                {
+                    var i = 5;
+                }
+                    
+                if (t is not { IsClass: true } || 
+                    t.IsAbstract) continue;
 
+                if (!transitionType.IsAssignableFrom(t)) continue;
+                
                 IStateTransition? current = null;
                 
                 foreach (var a in GetStateAttributes(t))
                 {
-                    current ??= Activator.CreateInstance<IStateTransition>();
-                    yield return (a.State, current.TransitAsync);
+                    current ??= Activator.CreateInstance(t) as IStateTransition;
+                    if (current != null)
+                    {
+                        yield return (a.State, current);    
+                    }
                 }
             }
         }
@@ -107,8 +118,11 @@ public class StateMachine : IStateMachine
     public StateMachine AddTransition(string fromState, IStateTransition t)
         => AddTransition(fromState, t.TransitAsync).AddTransition(fromState, t.Transit);
     
-    public async Task<StateData> RunAsync(StateMachineParameter p, CancellationToken cancellationToken = default)
+    public async Task<StateData> RunAsync(StateMachineParameter? p = null, 
+        CancellationToken cancellationToken = default)
     {
+        p = p ?? new StateMachineParameter();
+        
         var retVal = new StateData();
         
         retVal.SetStateData(p.StateData);
@@ -134,8 +148,10 @@ public class StateMachine : IStateMachine
         return retVal;
     }
     
-    public StateData Run(StateMachineParameter p)
+    public StateData Run(StateMachineParameter? p = null)
     {
+        p = p ?? new StateMachineParameter();
+        
         var retVal = new StateData();
         
         retVal.SetStateData(p.StateData);

@@ -7,7 +7,7 @@ public record class StateMachineParameter
 {
     private readonly int _n = 0;
 
-    public IStateTrial? Trial { get; init; } = new DefaultStateTrial(); 
+    public IStateTrial? Trial { get; set; } = new DefaultStateTrial(); 
 
     public int N
     {
