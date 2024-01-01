@@ -1,4 +1,5 @@
 using System.Data;
+using System.Reflection;
 using Tsm.Abstraction;
 using Tsm.Attributes;
 using Tsm.Domain;
@@ -8,7 +9,8 @@ namespace Tsm.Infrastructure;
 
 public class StateMachine : IStateMachine
 {
-    private readonly Dictionary<string, StateTransitionActionAsync> _stateTransitionFunctions = new();
+    private readonly Dictionary<string, StateTransitionActionAsync> _stateTransitionAsyncFunctions = new();
+    private readonly Dictionary<string, StateTransitionAction> _stateTransitionFunctions = new();
 
     public StateMachine()
     {
@@ -40,7 +42,7 @@ public class StateMachine : IStateMachine
         }
     }
 
-    private static IEnumerable<StateAttribute> GetStateAttributes(Type t)
+    private static IEnumerable<StateAttribute> GetStateAttributes(ICustomAttributeProvider t)
     {
         var stateAttributeType = typeof(StateAttribute);
         foreach (var a in t.GetCustomAttributes(stateAttributeType, false))
@@ -49,8 +51,18 @@ public class StateMachine : IStateMachine
         }
     }
 
+    private bool GotAsyncTransition(string fromState) => _stateTransitionAsyncFunctions.ContainsKey(fromState);
+    
     private bool GotTransition(string fromState) => _stateTransitionFunctions.ContainsKey(fromState);
 
+    private void CheckAsyncTransition(string fromState)
+    {
+        if (GotAsyncTransition(fromState))
+        {
+            throw new DuplicateNameException(fromState);
+        }
+    }
+    
     private void CheckTransition(string fromState)
     {
         if (GotTransition(fromState))
@@ -59,7 +71,13 @@ public class StateMachine : IStateMachine
         }
     }
 
-    private StateTransitionActionAsync GetStateTransition(string fromState)
+    private StateTransitionActionAsync GetStateAsyncTransition(string fromState)
+    {
+        if (_stateTransitionAsyncFunctions.TryGetValue(fromState, out var t)) return t;
+        throw new TransitionNotFoundException(fromState);
+    }
+    
+    private StateTransitionAction GetStateTransition(string fromState)
     {
         if (_stateTransitionFunctions.TryGetValue(fromState, out var t)) return t;
         throw new TransitionNotFoundException(fromState);
@@ -68,17 +86,27 @@ public class StateMachine : IStateMachine
     public StateMachine AddStartTransition(StateTransitionActionAsync t) 
         => AddTransition(IntrinsicStates.Start, t);
 
+    public StateMachine AddStartTransition(StateTransitionAction t) => AddTransition(IntrinsicStates.Start, t);
+
     public StateMachine AddStartTransition(IStateTransition t) => AddTransition(IntrinsicStates.Start, t);
 
     public StateMachine AddTransition(string fromState, StateTransitionActionAsync t)
+    {
+        CheckAsyncTransition(fromState);
+        _stateTransitionAsyncFunctions[fromState] = t;
+        return this;
+    }
+
+    public StateMachine AddTransition(string fromState, StateTransitionAction t)
     {
         CheckTransition(fromState);
         _stateTransitionFunctions[fromState] = t;
         return this;
     }
 
-    public StateMachine AddTransition(string fromState, IStateTransition t) => AddTransition(fromState, t.TransitAsync);
-
+    public StateMachine AddTransition(string fromState, IStateTransition t)
+        => AddTransition(fromState, t.TransitAsync).AddTransition(fromState, t.Transit);
+    
     public async Task<StateData> RunAsync(StateMachineParameter p, CancellationToken cancellationToken = default)
     {
         var retVal = new StateData();
@@ -92,8 +120,35 @@ public class StateMachine : IStateMachine
         while (!retVal.State.IsEnd())
         {
             if (n > 0 && i == n) return retVal;
-            var t = GetStateTransition(retVal.State);
+            var t = GetStateAsyncTransition(retVal.State);
             await t.Invoke(retVal, cancellationToken);
+            i++;
+        }
+
+        trial?.AddBreadCrumb(new BreadCrumb
+        {
+            State = "end",
+            Representation = retVal.GetStateData<object>()?.ToString()
+        });
+
+        return retVal;
+    }
+    
+    public StateData Run(StateMachineParameter p)
+    {
+        var retVal = new StateData();
+        
+        retVal.SetStateData(p.StateData);
+
+        var trial = p.Trial;
+
+        var i = 0;
+        var n = p.N;
+        while (!retVal.State.IsEnd())
+        {
+            if (n > 0 && i == n) return retVal;
+            var t = GetStateTransition(retVal.State);
+            t.Invoke(retVal);
             i++;
         }
 
